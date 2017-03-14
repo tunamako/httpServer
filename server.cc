@@ -53,6 +53,7 @@ int main(int argc, char *argv[]) {
 	int sock = makeSocket((string("1282") + argv[1]).c_str());
 
 	//We dont care about child processes, have the kernel kill the zambies
+	
 	signal(SIGCHLD, SIG_IGN);
 
 	while(1){
