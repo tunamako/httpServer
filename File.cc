@@ -28,6 +28,7 @@ File::File(string fp) {
 	this->metadata = getMetaData();	
 }
 
+//Very slow for uncommon filetypes
 string File::getContentType(){
 	ifstream file;
 	string line;

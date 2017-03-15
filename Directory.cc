@@ -43,7 +43,6 @@ string Directory::formatHTML(string fp){
 		 	continue;
 		 }
 
-
 		if(isDirectory(fp + string(tarDir->d_name))){
 			subDirs.push_back(string(tarDir->d_name));
 		} else {

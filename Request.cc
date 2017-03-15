@@ -12,17 +12,17 @@
 
 
 using namespace std;
-Request::Request(char *buffer) {
-	this->parts = parseRequest(buffer);
+Request::Request(char *aBuffer, ofstream *aLogFile) {
+	this->buffer = aBuffer;
+	parseRequest();
 	this->version = parts["Version"];
-
 	if (this->target->isDirectory(parts["Filepath"]))
 		this->target = new Directory(parts["Filepath"]);
 	else 
 		this->target = new File(parts["Filepath"]);
 
 	this->statusMsg = getStatusMsg();
-	logRequest();
+	logRequest(aLogFile);
 }
 
 string Request::getStatusMsg(){
@@ -33,7 +33,7 @@ string Request::getStatusMsg(){
 		: "404 File Not Found\r\n\r\nFile not found";
 }
 
-map<string, string> Request::parseRequest(char *buffer){
+void Request::parseRequest(){
 	string buf = string(buffer);
 	istringstream sstream(buf);
 	string line;
@@ -52,10 +52,10 @@ map<string, string> Request::parseRequest(char *buffer){
 			}
 		}
 	}
-	return parts;
+	this->parts = parts;
 }
 
-void Request::logRequest(){
+void Request::logRequest(ofstream *aLogFile){
 	cout << "\n" + parts["Command"] + " "
 		+ parts["Filepath"] + " "
 		+ parts["Version"] + "\n"
@@ -65,7 +65,7 @@ void Request::logRequest(){
 		? parts["Referer"] 
 		: "";
 
-	string log =  string("127.0.0.1")
+	string entry =  string("127.0.0.1")
 		+ " - - [" + target->accessDate + "] \"" 
 		+ parts["Command"] + " "
 		+ parts["Filepath"] + " "
@@ -74,9 +74,9 @@ void Request::logRequest(){
 		+ " " + target->fileSize + " "
 		+ " \"" + referer + "\" "
 		+ "\"" + parts["User-Agent"] + "\"\n";
-	ofstream logFile;
-	logFile.open("log.txt", ios_base::app);
-	logFile << log;
+		
+	(*aLogFile) << entry;
+	aLogFile->flush();
 }
 
 void Request::sendResponse(int fileDescriptor){

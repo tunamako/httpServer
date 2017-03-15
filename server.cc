@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <csignal>
+#include <fstream>
 
 using namespace std;
 const int BUFSIZE = 1024;
@@ -51,30 +52,31 @@ int makeFileDescriptor(int sock){
 int main(int argc, char *argv[]) {
 	char buffer[BUFSIZE];
 	int sock = makeSocket((string("1282") + argv[1]).c_str());
+	ofstream *aLogFile = new ofstream("log.txt", ios_base::app);
 
 	//We dont care about child processes, have the kernel kill the zambies
-	
+	//From http://stackoverflow.com/questions/6718272/c-exec-fork-defunct-processes
 	signal(SIGCHLD, SIG_IGN);
 
 	while(1){
 		int fileDescriptor = makeFileDescriptor(sock);
-		int readLen = read(fileDescriptor, buffer, BUFSIZE);
-	
-		if(readLen == -1){
-			perror("Bad read");
-			close(fileDescriptor);
-			continue;
-		}
-		if(readLen == 0){
-			cout << "Empty Request" << endl;
-			close(fileDescriptor);
-			continue;
-		}
 
 		if(fork() == 0){
 			//Child
+			int readLen = read(fileDescriptor, buffer, BUFSIZE);
+	
+			if(readLen == -1){
+				perror("Bad read");
+				close(fileDescriptor);
+				continue;
+			}
+			if(readLen == 0){
+				cout << "Empty Request" << endl;
+				close(fileDescriptor);
+				continue;
+			}
 			buffer[readLen] = 0;
-			Request *aRequest = new Request(buffer);
+			Request *aRequest = new Request(buffer, aLogFile);
 			aRequest->sendResponse(fileDescriptor);
 
 			close(fileDescriptor);
